@@ -354,6 +354,10 @@ public class VKUtil {
         List.of(array).forEach(cols -> List.of(cols).forEach(buffer::put));
     }
 
+    public static void matrixToIntBuffer(int[] array, IntBuffer buffer) {
+        List.of(array).forEach(buffer::put);
+    }
+
     public static boolean getMemoryType(VkPhysicalDeviceMemoryProperties deviceMemoryProperties, int typeBits, int properties, IntBuffer typeIndex) {
         int bits = typeBits;
         for (int i = 0; i < 32; i++) {
