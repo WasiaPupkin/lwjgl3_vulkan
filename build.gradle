@@ -31,12 +31,17 @@ jar {
 repositories {
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    //All sub-projects will now refer to the same 'libs' directory
+    flatDir {
+        dirs "D:\\git_projects\\Obj\\target"
+    }
 }
 
 dependencies {
     implementation 'org.slf4j:slf4j-simple:2.0.3'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
+    implementation name: 'obj-0.3.1-SNAPSHOT'
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
     implementation "org.lwjgl:lwjgl"
     implementation "org.lwjgl:lwjgl-assimp"
