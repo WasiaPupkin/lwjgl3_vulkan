@@ -3,6 +3,9 @@ package util;/*
  * License terms: https://www.lwjgl.org/license
  */
 
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.CustomBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -370,6 +373,20 @@ public class VKUtil {
             bits >>= 1;
         }
         return false;
+    }
+
+    public static int sizeof(Object type) {
+        if (type instanceof Vector2f vec2) {
+            return (new float[] {vec2.x(), vec2.y()}).length * Float.BYTES;
+        } else if (type instanceof Vector3f vec3) {
+            return (new float[] {vec3.x(), vec3.y(), vec3.z()}).length * Float.BYTES;
+        } else if (type instanceof Matrix4f mat4) {
+            return (new float[] {mat4.m00(), mat4.m01(), mat4.m02(), mat4.m03(),
+                    mat4.m10(),mat4.m11(),mat4.m12(),mat4.m13(),
+                    mat4.m20(),mat4.m21(),mat4.m22(),mat4.m23(),
+                    mat4.m30(),mat4.m31(),mat4.m32(),mat4.m33()}).length * Float.BYTES;
+        }
+        throw new UnsupportedOperationException("Unknown data type");
     }
 
     public static float modulo(float x, float y){
