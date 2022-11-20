@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.lwjgl.vulkan.KHRMaintenance1.VK_ERROR_OUT_OF_POOL_MEMORY_KHR;
 import static util.IOUtil.ioResourceToByteBuffer;
 import static java.lang.Math.floor;
 import static org.lwjgl.BufferUtils.createByteBuffer;
@@ -257,6 +258,8 @@ public class VKUtil {
                         + " image.";
             case VK_ERROR_VALIDATION_FAILED_EXT:
                 return "A validation layer found an error.";
+            case VK_ERROR_OUT_OF_POOL_MEMORY_KHR:
+                return "VK_ERROR_OUT_OF_POOL_MEMORY_KHR";
             default:
                 return String.format("%s [%d]", "Unknown", Integer.valueOf(result));
         }
