@@ -6,6 +6,7 @@ package util;/*
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.CustomBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -383,6 +384,8 @@ public class VKUtil {
             return (new float[] {vec2.x(), vec2.y()}).length * Float.BYTES;
         } else if (type instanceof Vector3f vec3) {
             return (new float[] {vec3.x(), vec3.y(), vec3.z()}).length * Float.BYTES;
+        } else if (type instanceof Vector4f vec4) {
+            return (new float[] {vec4.x(), vec4.y(), vec4.z(), vec4.w()}).length * Float.BYTES;
         } else if (type instanceof Matrix4f mat4) {
             return (new float[] {mat4.m00(), mat4.m01(), mat4.m02(), mat4.m03(),
                     mat4.m10(),mat4.m11(),mat4.m12(),mat4.m13(),
