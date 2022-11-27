@@ -47,6 +47,7 @@ public class PointLightSystem {
         // bind pipline
         lvePipeLine.bind(frameInfo.commandBuffer());
 
+//        fixme try to reuse memory
         LongBuffer globalDescriptorSet = memAllocLong(1).put(0, frameInfo.globalDescriptorSet());
         vkCmdBindDescriptorSets(frameInfo.commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, globalDescriptorSet, null);
         memFree(globalDescriptorSet);

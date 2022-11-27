@@ -1,11 +1,11 @@
-package t24;
+package t25;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.vulkan.VkCommandBuffer;
-import t24.systems.PointLightSystem;
-import t24.systems.SimpleRenderSystem;
+import t25.systems.PointLightSystem;
+import t25.systems.SimpleRenderSystem;
 import util.VKUtil;
 
 import java.io.IOException;
@@ -29,14 +29,7 @@ import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_ALL_GRAPHICS;
 import static org.lwjgl.vulkan.VK10.VK_WHOLE_SIZE;
 
 public class FirstApp {
-
-    public class GlobalUbo {
-        public volatile Matrix4f projection = new Matrix4f();
-        public volatile Matrix4f view = new Matrix4f();
-        public volatile Vector4f ambientLightColor = new Vector4f(1.f, 1.f, 1.f, .02f); // w is intensity
-        public volatile Vector3f lightPosition = new Vector3f(-1.f);
-        public volatile Vector4f lightColor = new Vector4f(1.f); // w is light intensity
-    }
+    public final static int MAX_LIGHTS = 10;
     private final static int HEIGHT = 1200;
     private final static int WIDTH = 1600;
     private Map<Integer, LveGameObject> gameObjects;
@@ -66,10 +59,12 @@ public class FirstApp {
 
     public synchronized void run() {
         Vector<LveBuffer> uboBuffers = new Vector<>();
+        GlobalUbo ubo = new GlobalUbo();
+
         for (int i = 0; i < LveSwapChain.MAX_FRAMES_IN_FLIGHT; i++) {
             var uboBuffser = new LveBuffer(
                     lveDevice,
-                    VKUtil.sizeof(new Matrix4f()) + VKUtil.sizeof(new Matrix4f()) + VKUtil.sizeof(new Vector4f()) + VKUtil.sizeof(new Vector4f()) + VKUtil.sizeof(new Vector4f()),
+                    ubo.sizeOf(),
                     1,
                     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -134,15 +129,18 @@ public class FirstApp {
                         gameObjects
                 );
                 // update
-                GlobalUbo ubo = new GlobalUbo();
+
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
+
+                pointLightSystem.update(frameInfo, ubo);
 
                 ByteBuffer uboByteBuffer = memByteBuffer(uboBuffers.get(frameIndex).getMappedMemory(), (int) uboBuffers.get(frameIndex).getBufferSize());
                 uboFloatBuffer(ubo, uboByteBuffer.asFloatBuffer());
 //                uboByteBuffer.flip();
 
                 uboBuffers.get(frameIndex).writeToIndex(memAddress(uboByteBuffer), frameIndex);
+//                uboBuffers.get(frameIndex).writeToBuffer(memAddress(uboByteBuffer), VKUtil.sizeof(new Matrix4f()) + VKUtil.sizeof(new Matrix4f()) + VKUtil.sizeof(new Vector4f()) + (VKUtil.sizeof(new Vector4f()) * 2 * 10) + Integer.BYTES, frameIndex);
 //                uboBuffers.get(frameIndex).flushIndex(frameIndex);
 
                 // render
@@ -157,7 +155,9 @@ public class FirstApp {
 //            System.gc();
         }
 //        todo?
-        gameObjects.values().forEach(obj->obj.model.onDestroy());
+        gameObjects.values().forEach(obj-> {
+            if(obj.model!=null) obj.model.onDestroy();
+        });
         uboBuffers.forEach(LveBuffer::onDestroy);
         globalSetLayout.onDestroy();
         globalPool.onDestroy();
@@ -183,10 +183,26 @@ public class FirstApp {
                 ubo.view.m20(),ubo.view.m21(),ubo.view.m22(),ubo.view.m23(),
                 ubo.view.m30(),ubo.view.m31(),ubo.view.m32(),ubo.view.m33(),
                 ubo.ambientLightColor.x(), ubo.ambientLightColor.y(), ubo.ambientLightColor.z(), ubo.ambientLightColor.w(),
-                0, // padding for alignment
-                ubo.lightPosition.x(), ubo.lightPosition.y(), ubo.lightPosition.z(),
-                ubo.lightColor.x(), ubo.lightColor.y(), ubo.lightColor.z(), ubo.lightColor.w()
+                0,0,0, ubo.numLights.w(),
+                ubo.pointLights[0].position.x(), ubo.pointLights[0].position.y(), ubo.pointLights[0].position.z(), ubo.pointLights[0].position.w(),
+                ubo.pointLights[0].color.x(), ubo.pointLights[0].color.y(), ubo.pointLights[0].color.z(), ubo.pointLights[0].color.w(),
+
+                ubo.pointLights[1].position.x(), ubo.pointLights[1].position.y(), ubo.pointLights[1].position.z(), ubo.pointLights[1].position.w(),
+                ubo.pointLights[1].color.x(), ubo.pointLights[1].color.y(), ubo.pointLights[1].color.z(), ubo.pointLights[1].color.w(),
+
+                ubo.pointLights[2].position.x(), ubo.pointLights[2].position.y(), ubo.pointLights[2].position.z(), ubo.pointLights[2].position.w(),
+                ubo.pointLights[2].color.x(), ubo.pointLights[2].color.y(), ubo.pointLights[2].color.z(), ubo.pointLights[2].color.w(),
+
+                ubo.pointLights[3].position.x(), ubo.pointLights[3].position.y(), ubo.pointLights[3].position.z(), ubo.pointLights[3].position.w(),
+                ubo.pointLights[3].color.x(), ubo.pointLights[3].color.y(), ubo.pointLights[3].color.z(), ubo.pointLights[3].color.w(),
+
+                ubo.pointLights[4].position.x(), ubo.pointLights[4].position.y(), ubo.pointLights[4].position.z(), ubo.pointLights[4].position.w(),
+                ubo.pointLights[4].color.x(), ubo.pointLights[4].color.y(), ubo.pointLights[4].color.z(), ubo.pointLights[4].color.w(),
+
+                ubo.pointLights[5].position.x(), ubo.pointLights[5].position.y(), ubo.pointLights[5].position.z(), ubo.pointLights[5].position.w(),
+                ubo.pointLights[5].color.x(), ubo.pointLights[5].color.y(), ubo.pointLights[5].color.z(), ubo.pointLights[5].color.w()
         };
+//        System.out.println();
         List.of(array).forEach(cols -> List.of(cols).forEach(buffer::put));
     }
 
@@ -211,6 +227,24 @@ public class FirstApp {
         floor.transform.translation = new Vector3f(0.f, .5f, 0.f);
         floor.transform.scale = new Vector3f(3.f, 1.f, 3.f);
         gameObjects.put(floor.getId(), floor);
+
+        List<Vector3f> lightColors = List.of(
+            new Vector3f(1.f, .1f, .1f),
+            new Vector3f(.1f, .1f, 1.f),
+            new Vector3f(.1f, 1.f, .1f),
+            new Vector3f(1.f, 1.f, .1f),
+            new Vector3f(.1f, 1.f, 1.f),
+            new Vector3f(1.f, 1.f, 1.f)
+        );
+
+        for (int i = 0; i < lightColors.size(); i++) {
+            var pointLight = LveGameObject.makePointLight(0.2f, 0, null);
+            pointLight.color = lightColors.get(i);
+            var rotateLight = new Matrix4f().rotate((float)(i * 2 * Math.PI / lightColors.size()), new Vector3f(0.f, -1.f, 0.f));
+//            pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+            pointLight.transform.translation = rotateLight.transformProject(new Vector4f(-1.f, -1.f, -1.f, 1.f), new Vector3f());
+            gameObjects.put(pointLight.getId(), pointLight);
+        }
     }
 
     public static void main(String[] args) throws IOException {
